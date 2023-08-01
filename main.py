@@ -15,8 +15,7 @@ def genero(año: str):
 @app.get('/ Juegos')
 def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-    juegos_counts = df_filtrado['title'].value_counts()
-    juegos_lanzados = juegos_counts.tolist()
+    juegos_lanzados = df_filtrado['title'].tolist()
 
     return juegos_lanzados
 
@@ -46,6 +45,9 @@ def sentiment(año: str):
     sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
                             "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
     sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
+
+     if not sentimient_dict:
+        return "Sin registros"
 
     return sentimient_dict
 
