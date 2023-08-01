@@ -46,7 +46,7 @@ def sentiment(año: str):
                             "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
     sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
 
-     if not sentimient_dict:
+    if not sentimient_dict:
         return "Sin registros"
 
     return sentimient_dict
