@@ -1,1 +1,7 @@
-
+fast api
+pandas
+uvicorn
+numpy
+scikit.learn
+seaborn
+matplotlib
