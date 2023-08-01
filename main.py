@@ -18,16 +18,17 @@ def juegos(año: str):
     return juegos_lanzados
 
 
-@app.get('/specs/ Specs')
+@app.get('/ Specs')
 def specs(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)]
+    df_filtrado = specs[specs['release_date'].dt.year == int(año)]
+    
     specs_list = df_filtrado['specs'].explode().tolist()
 
     specs_count = pd.Series(specs_list).value_counts()
 
-    specs_mas_comunes = specs_count.nlargest(5).index.todict()
+    top_5_specs = specs_count.nlargest(5).to_dict()
 
-    return specs_mas_comunes
+    return top_5_specs
 
 @app.get('/ Earlyacces')
 def earlyacces(año: str):
