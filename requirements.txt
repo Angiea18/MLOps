@@ -1,4 +1,4 @@
-fast api
+fastapi
 pandas
 uvicorn
 numpy
