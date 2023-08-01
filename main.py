@@ -20,13 +20,17 @@ def juegos(año: str):
 
 @app.get('/ Specs')
 def specs(año: str):
-    df_filtrado = specs[specs['release_date'].dt.year == int(año)]
-    
+    df_filtrado = df[df['release_date'].dt.year == int(año)]
+
     specs_list = df_filtrado['specs'].explode().tolist()
 
     specs_count = pd.Series(specs_list).value_counts()
 
     top_5_specs = specs_count.nlargest(5).to_dict()
+
+    print("Los 5 specs más comunes en el año", año, "son:")
+    for spec, count in top_5_specs.items():
+        print(spec, ":", count)
 
     return top_5_specs
 
