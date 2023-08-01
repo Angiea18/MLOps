@@ -9,8 +9,6 @@ def genero(año: str):
     generos_mas_vendidos = df_filtrado['genres'].explode().value_counts().nlargest(5).index.todict()
 
     return generos_mas_vendidos
-resultado = genero()
-print(resultado)
 
 @app.get('/ Juegos')
 def juegos(año: str):
