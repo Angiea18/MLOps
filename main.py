@@ -3,8 +3,7 @@ import ast
 import pandas as pd
 
 # Indicamos título y descripción de la API
-app = FastAPI(title='PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps) -Angie Arango Zapata DTS13',
-            description='API de datos de videojuegos')
+app = FastAPI(title='PI N°1 (MLOps) -Angie Arango Zapata DTS13')
 
 #Dataset
 games = []
@@ -14,17 +13,6 @@ with open('steam_games.json') as f:
 df = pd.DataFrame(games) 
 df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
 df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
-
-# Función para reconocer el servidor local
-
-@app.get('/')
-async def index():
-    return {'Hola! Bienvenido a la API de recomedación. Por favor dirigite a /docs'}
-
-@app.get('/about/')
-async def about():
-    return {'PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps)'}
-
 
 # Endpoint 1: Géneros más vendidos por año
 @app.get('/ Genero')
