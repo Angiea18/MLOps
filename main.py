@@ -6,7 +6,9 @@ app = FastAPI()
 @app.get('/ Genero')
 def genero(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-    generos_mas_vendidos = df_filtrado['genres'].explode().value_counts().nlargest(5).index.todict()
+    generos_list = df_filtrado['genres'].explode().tolist()
+    generos_count = pd.Series(generos_list).value_counts()
+    generos_mas_vendidos = generos_count.nlargest(5).index.tolist()
 
     return generos_mas_vendidos
 
