@@ -16,7 +16,7 @@ def genero(año: str):
 def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
     juegos_counts = df_filtrado['title'].value_counts()
-    juegos_lanzados = juegos_counts.to_dict()
+    juegos_lanzados = juegos_counts.tolist()
 
     return juegos_lanzados
 
@@ -41,12 +41,13 @@ def earlyacces(año: str):
 @app.get('/ Sentimient')
 def sentiment(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
+    sentimient_counts = df_filtrado['sentiment'].value_counts()
+    sentimient_dict = sentimient_counts.to_dict()
+    sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
+                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
+    sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
 
-    sentimiento_counts = df_filtrado['sentiment'].value_counts()
-
-    sentimiento_dict = sentimiento_counts.to_dict()
-
-    return sentimiento_dict
+    return sentimient_dict
 
 @app.get('/ Metascore')
 def metascore(año: str):
