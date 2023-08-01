@@ -3,23 +3,23 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-@app.get('/genero/{anio}')
-def genero(anio: str):
+@app.get('/genero/ Genero')
+def genero(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(ano)]
-    generos_mas_vendidos = df_filtrado['genres'].explode().value_counts().nlargest(5).index.tolist()
+    generos_mas_vendidos = df_filtrado['genres'].explode().value_counts().nlargest(5).index.todict()
 
     return generos_mas_vendidos
 
-@app.get('/juegos/{anio}')
-def juegos(anio: str):
+@app.get('/juegos/ Juegos')
+def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(ano)]
     juegos_lanzados = df_filtrado['title'].tolist()
 
     return juegos_lanzados
 
 
-@app.get('/specs/{anio}')
-def specs(anio: str):
+@app.get('/specs/ Specs')
+def specs(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(ano)]
     specs_list = df_filtrado['specs'].explode().tolist()
 
@@ -29,8 +29,8 @@ def specs(anio: str):
 
     return specs_mas_comunes
 
-@app.get('/earlyacces/{anio}')
-def earlyacces(anio: str):
+@app.get('/earlyacces/ Earlyacces')
+def earlyacces(año: str):
     df_filtrado = df[(df['release_date'].dt.year == int(ano)) & (df['early_access'] == True)]
 
     cantidad_juegos_early_access = len(df_filtrado)
@@ -38,8 +38,8 @@ def earlyacces(anio: str):
     return cantidad_juegos_early_access
 
 
-@app.get('/sentiment/{anio}')
-def sentiment(anio: str):
+@app.get('/sentiment/ Sentimient')
+def sentiment(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(ano)]
 
     sentimiento_counts = df_filtrado['sentiment'].value_counts()
@@ -49,8 +49,8 @@ def sentiment(anio: str):
     return sentimiento_dict
 
 
-@app.get('/metascore/{anio}')
-def metascore(anio: str):
+@app.get('/metascore/ Metascore')
+def metascore(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(ano)].sort_values(by='metascore', ascending=False)
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
