@@ -1,6 +1,7 @@
 from fastapi import FastAPI 
 
-app = FastAPI()
+app = FastAPI(title='PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps) -Angie Arango Zapata DTS13',
+            description='API de datos de videojuegos')
 
 
 @app.get('/ Genero')
