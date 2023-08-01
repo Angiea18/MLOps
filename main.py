@@ -3,14 +3,16 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-@app.get('/genero/ Genero')
+@app.get('/ Genero')
 def genero(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
     generos_mas_vendidos = df_filtrado['genres'].explode().value_counts().nlargest(5).index.todict()
 
     return generos_mas_vendidos
+resultado = genero()
+print(resultado)
 
-@app.get('/juegos/ Juegos')
+@app.get('/ Juegos')
 def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
     juegos_lanzados = df_filtrado['title'].tolist()
@@ -29,7 +31,7 @@ def specs(año: str):
 
     return specs_mas_comunes
 
-@app.get('/earlyacces/ Earlyacces')
+@app.get('/ Earlyacces')
 def earlyacces(año: str):
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
 
@@ -38,7 +40,7 @@ def earlyacces(año: str):
     return cantidad_juegos_early_access
 
 
-@app.get('/sentiment/ Sentimient')
+@app.get('/ Sentimient')
 def sentiment(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
 
@@ -49,7 +51,7 @@ def sentiment(año: str):
     return sentimiento_dict
 
 
-@app.get('/metascore/ Metascore')
+@app.get('/ Metascore')
 def metascore(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
@@ -65,3 +67,5 @@ with open('steam_games.json') as f:
     for line in f.readlines():
         games.append(ast.literal_eval(line)) 
 df = pd.DataFrame(games) 
+df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
+df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
