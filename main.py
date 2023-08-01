@@ -1,68 +1,12 @@
 from fastapi import FastAPI 
-
-app = FastAPI(title='PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps) -Angie Arango Zapata DTS13',
-            description='API de datos de videojuegos')
-
-
-@app.get('/ Genero')
-def genero(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)]
-    generos_list = df_filtrado['genres'].explode().tolist()
-    generos_count = pd.Series(generos_list).value_counts()
-    generos_mas_vendidos = generos_count.nlargest(5).to_dict()
-
-    return generos_mas_vendidos
-
-@app.get('/ Juegos')
-def juegos(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)]
-    juegos_lanzados = df_filtrado['title'].tolist()
-
-    return juegos_lanzados
-
-@app.get('/ Specs')
-def specs(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)]
-    specs_list = df_filtrado['specs'].explode().tolist()
-    specs_count = pd.Series(specs_list).value_counts()
-    
-    top_5_specs = specs_count.nlargest(5).to_dict()
-    
-    return top_5_specs
-
-@app.get('/ Earlyacces')
-def earlyacces(año: str):
-    df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
-
-    cantidad_juegos_early_access = len(df_filtrado)
-
-    return cantidad_juegos_early_access
-
-@app.get('/ Sentimient')
-def sentiment(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)]
-    sentimient_counts = df_filtrado['sentiment'].value_counts()
-    sentimient_dict = sentimient_counts.to_dict()
-    sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
-                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
-    sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
-
-    if not sentimient_dict:
-        return "Sin registros"
-
-    return sentimient_dict
-
-@app.get('/ Metascore')
-def metascore(año: str):
-    df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
-    top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
-
-    return top_juegos_metascore
-
-
 import ast
 import pandas as pd
 
+# Indicamos título y descripción de la API
+app = FastAPI(title='PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps) -Angie Arango Zapata DTS13',
+            description='API de datos de videojuegos')
+
+#Dataset
 games = []
 with open('steam_games.json') as f: 
     for line in f.readlines():
@@ -70,3 +14,104 @@ with open('steam_games.json') as f:
 df = pd.DataFrame(games) 
 df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
 df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
+
+# Función para reconocer el servidor local
+
+@app.get('/')
+async def index():
+    return {'Hola! Bienvenido a la API de recomedación. Por favor dirigite a /docs'}
+
+@app.get('/about/')
+async def about():
+    return {'PROYECTO INDIVIDUAL Nº1 -Machine Learning Operations (MLOps)'}
+
+
+# Endpoint 1: Géneros más vendidos por año
+@app.get('/ Genero')
+def genero(año: str):
+    # Filtrar el DataFrame por el año proporcionado
+    df_filtrado = df[df['release_date'].dt.year == int(año)]
+    
+    # Obtener una lista con todos los géneros para el año dado
+    generos_list = df_filtrado['genres'].explode().tolist()
+
+    # Calcular el conteo de cada género en la lista
+    generos_count = pd.Series(generos_list).value_counts()
+
+    # Obtener los 5 géneros más vendidos en orden correspondiente
+    generos_mas_repetidos = generos_count.nlargest(5).to_dict()
+
+    return generos_mas_repetidos
+
+# Endpoint 2: Juegos lanzados en un año
+@app.get('/ Juegos')
+def juegos(año: str):
+    # Filtrar los datos por el año especificado
+    df_filtrado = df[df['release_date'].dt.year == int(año)]
+
+    # Obtiener la lista de juegos lanzados en el año
+    juegos_lanzados = df_filtrado['title'].tolist()
+
+    return juegos_lanzados
+
+# Endpoint 3: Specs más comunes por año
+@app.get('/ Specs')
+def specs(año: str):
+    # Filtrar el DataFrame por el año proporcionado
+    df_filtrado = df[df['release_date'].dt.year == int(año)]
+    
+    # Obtener una lista con todos los Specs para el año dado
+    specs_list = df_filtrado['specs'].explode().tolist()
+
+    # Calcular el conteo de cada Spec en la lista
+    specs_count = pd.Series(specs_list).value_counts()
+
+    # Obtener los 5 Specs más comunes en orden correspondiente
+    top_5_specs = specs_count.nlargest(5).to_dict()
+
+    return top_5_specs
+
+# Endpoint 4: Cantidad de juegos con early access en un año
+@app.get('/ Earlyacces')
+def earlyacces(año: str):
+    #Filtrar los datos por el año especificado y por juegos con early access
+    df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
+
+    #Contar la cantidad de juegos con early access en el año especificado
+    cantidad_juegos_early_access = len(df_filtrado)
+
+    return cantidad_juegos_early_access
+
+# Endpoint 5: Análisis de sentimiento por año
+@app.get('/ Sentimient')
+def sentiment(año: str):
+    # Filtrar los datos por el año especificado
+    df_filtrado = df[df['release_date'].dt.year == int(año)]
+
+    # Contar la cantidad de registros que cumplen con cada análisis de sentimiento
+    sentimient_counts = df_filtrado['sentiment'].value_counts()
+
+    # Convertir la serie de conteo en un diccionario
+    sentimient_dict = sentimient_counts.to_dict()
+
+    # Eliminar sentimientos que no están en la lista mencionada
+    sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
+                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
+    sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
+
+     # Verificar si el diccionario está vacío
+    if not sentimient_dict:
+        return "Sin registros"
+
+    return sentimient_dict
+
+# Endpoint 6: Top 5 juegos con mayor metascore por año
+@app.get('/ Metascore')
+def metascore(año: str):
+    #Filtrar los datos por el año especificado y ordena por metascore de forma descendente
+    df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
+
+    #Seleccionar los 5 juegos con mayor metascore y obtiene su información
+    top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
+
+    return top_juegos_metascore
