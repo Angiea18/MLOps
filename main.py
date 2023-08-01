@@ -8,26 +8,28 @@ def genero(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
     generos_list = df_filtrado['genres'].explode().tolist()
     generos_count = pd.Series(generos_list).value_counts()
-    generos_mas_vendidos = generos_count.nlargest(5).index.tolist()
+    generos_mas_vendidos = generos_count.nlargest(5).to_dict()
 
     return generos_mas_vendidos
 
 @app.get('/ Juegos')
 def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-    juegos_lanzados = df_filtrado['title'].tolist()
+    juegos_lanzados = df_filtrado['title'].todict()
 
-    return juegos_lanzados
+    juegos_count = {}
+    for juego in juegos_lanzados:
+        juegos_count[juego] = juegos_lanzados.count(juego)
+
+    return juegos_count
 
 
 @app.get('/ Specs')
 def specs(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-
     specs_list = df_filtrado['specs'].explode().tolist()
-
     specs_count = pd.Series(specs_list).value_counts()
-
+    
     top_5_specs = specs_count.nlargest(5).to_dict()
 
     print("Los 5 specs más comunes en el año", año, "son:")
