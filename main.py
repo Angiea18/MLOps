@@ -15,14 +15,10 @@ def genero(año: str):
 @app.get('/ Juegos')
 def juegos(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-    juegos_lanzados = df_filtrado['title'].todict()
+    juegos_counts = df_filtrado['title'].value_counts()
+    juegos_lanzados = juegos_counts.to_dict()
 
-    juegos_count = {}
-    for juego in juegos_lanzados:
-        juegos_count[juego] = juegos_lanzados.count(juego)
-
-    return juegos_count
-
+    return juegos_lanzados
 
 @app.get('/ Specs')
 def specs(año: str):
@@ -31,11 +27,7 @@ def specs(año: str):
     specs_count = pd.Series(specs_list).value_counts()
     
     top_5_specs = specs_count.nlargest(5).to_dict()
-
-    print("Los 5 specs más comunes en el año", año, "son:")
-    for spec, count in top_5_specs.items():
-        print(spec, ":", count)
-
+    
     return top_5_specs
 
 @app.get('/ Earlyacces')
@@ -46,7 +38,6 @@ def earlyacces(año: str):
 
     return cantidad_juegos_early_access
 
-
 @app.get('/ Sentimient')
 def sentiment(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -56,7 +47,6 @@ def sentiment(año: str):
     sentimiento_dict = sentimiento_counts.to_dict()
 
     return sentimiento_dict
-
 
 @app.get('/ Metascore')
 def metascore(año: str):
