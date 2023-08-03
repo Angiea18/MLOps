@@ -115,15 +115,17 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
+
 # Cargar los datos preprocesados
 df_limpio = pd.read_csv('datos_limpio.csv')
 
-def train_model(df, genres, early_access):
+# Función para entrenar el modelo y calcular el RMSE
+def train_model():
     # Filtrar los registros con valores no nulos en la columna 'genres'
-    df_filtrado = df[df['genres'].notnull()]
+    df_filtrado = df_limpio[df_limpio['genres'].notnull()]
 
     # Paso 1: Filtrar el DataFrame según el género y la disponibilidad anticipada
-    df_filtrado = df_filtrado[(df_filtrado['genres'].apply(lambda x: genres in x)) & (df_filtrado['early_access'] == early_access)]
+    df_filtrado = df_filtrado[(df_filtrado['genres'].apply(lambda x: genero_elegido in x)) & (df_filtrado['early_access'] == earlyaccess_elegido)]
 
     # Paso 2: Preparar los datos (asegúrate de haber realizado las transformaciones previas)
     X = df_filtrado['early_access']
@@ -150,21 +152,25 @@ def train_model(df, genres, early_access):
     # Paso 6: Entrenar el modelo de Bagging con los datos de entrenamiento
     bagging_model.fit(X_train, y_train)
 
+    # Calcular el RMSE del modelo utilizando los datos de prueba
+    y_pred = bagging_model.predict(X_test)
+    rmse = mean_squared_error(y_test, y_pred, squared=False)
+
     # Guardar el modelo entrenado en un archivo pickle
     with open('modelo.pickle', 'wb') as file:
         pickle.dump(bagging_model, file)
 
+    # Retornar el modelo entrenado y el RMSE
+    return bagging_model, rmse
+
 # Ejemplo de uso:
 genero_elegido = 'Action'
 earlyaccess_elegido = True
-train_model(df_limpio, genero_elegido, earlyaccess_elegido)
+model, rmse = train_model()
 
 # Cargar el modelo desde el archivo pickle
 with open('modelo.pickle', 'rb') as file:
     model = pickle.load(file)
-
-# Cargar el DataFrame preprocesado
-df_limpio = pd.read_csv('datos_limpio.csv')
 
 app = FastAPI()
 
@@ -183,19 +189,17 @@ def predict(item: Item):
         raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
 
     # Crear un diccionario con las características ingresadas
-    data = {'metascore': [0.0],
-            'year': [0]}
+    data = {'early_access': [item.early_access]}
     for genre in df_limpio['genres'].unique():
-        if genre == item.genres:
-            data[genre] = [1]
-        else:
-            data[genre] = [0]
+        data[genre] = [1 if genre in item.genres else 0]
 
     # Crear el DataFrame de entrada para la predicción
     input_df = pd.DataFrame(data)
+    input_df.drop(columns=['early_access'], inplace=True)
 
     # Realizar la predicción con el modelo cargado
     precio_predicho = model.predict(input_df)
 
-    # Retornar la predicción de precio en formato JSON
-    return {"precio_predicho": precio_predicho[0]}
+    # Retornar la predicción de precio y el RMSE en formato JSON
+    return {"precio_predicho": precio_predicho[0], "rmse": rmse}
+
