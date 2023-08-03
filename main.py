@@ -115,6 +115,50 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
+# Cargar los datos preprocesados
+df_limpio = pd.read_csv('datos_limpio.csv')
+
+def train_model(df, genres, early_access):
+    # Filtrar los registros con valores no nulos en la columna 'genres'
+    df_filtrado = df[df['genres'].notnull()]
+
+    # Paso 1: Filtrar el DataFrame según el género y la disponibilidad anticipada
+    df_filtrado = df_filtrado[(df_filtrado['genres'].apply(lambda x: genres in x)) & (df_filtrado['early_access'] == early_access)]
+
+    # Paso 2: Preparar los datos (asegúrate de haber realizado las transformaciones previas)
+    X = df_filtrado['early_access']
+    # Codificar la columna 'genres' en características binarias mediante one-hot encoding
+    genres_encoded = pd.get_dummies(df_filtrado['genres'].apply(pd.Series).stack()).groupby(level=0).sum()
+    # Combinar las características codificadas con la columna 'early_access'
+    X = pd.concat([X, genres_encoded], axis=1)
+
+    y = df_filtrado['price']
+
+    # Eliminar filas con valores faltantes
+    X.dropna(inplace=True)
+    y = y[X.index]
+
+    # Paso 3: Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Paso 4: Crear el modelo base de regresión lineal
+    base_model = LinearRegression()
+
+    # Paso 5: Crear el modelo de Bagging utilizando el modelo base
+    bagging_model = BaggingRegressor(base_model, n_estimators=10, random_state=42)
+
+    # Paso 6: Entrenar el modelo de Bagging con los datos de entrenamiento
+    bagging_model.fit(X_train, y_train)
+
+    # Guardar el modelo entrenado en un archivo pickle
+    with open('modelo.pickle', 'wb') as file:
+        pickle.dump(bagging_model, file)
+
+# Ejemplo de uso:
+genero_elegido = 'Action'
+earlyaccess_elegido = True
+train_model(df_limpio, genero_elegido, earlyaccess_elegido)
+
 # Cargar el modelo desde el archivo pickle
 with open('modelo.pickle', 'rb') as file:
     model = pickle.load(file)
