@@ -1,6 +1,15 @@
-from fastapi import FastAPI 
 import ast
 import pandas as pd
+import numpy as np
+from fastapi import FastAPI 
+from fastapi import FastAPI, HTTPException
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import BaggingRegressor
+from pydantic import BaseModel
+from sklearn.decomposition import PCA
+import pickle
 
 # Indicamos título y descripción de la API
 app = FastAPI(title='PI N°1 (MLOps) -Angie Arango Zapata DTS13')
@@ -14,7 +23,8 @@ df = pd.DataFrame(games)
 df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
 df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
 
-# Endpoint 1: Géneros más vendidos por año
+
+# Endpoint 1: Géneros más repetidos por año
 @app.get('/ Genero')
 def genero(año: str):
     # Filtrar el DataFrame por el año proporcionado
@@ -84,7 +94,7 @@ def sentiment(año: str):
 
     # Eliminar sentimientos que no están en la lista mencionada
     sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
-                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive", "Overwhelmingly Negative"]
+                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
     sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
 
      # Verificar si el diccionario está vacío
@@ -103,3 +113,96 @@ def metascore(año: str):
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
     return top_juegos_metascore
+
+
+# Cargar el modelo desde el archivo pickle
+with open('modelo.pickle', 'rb') as file:
+    model = pickle.load(file)
+
+# Cargar el DataFrame preprocesado
+df_limpio = pd.read_csv('datos_limpio.csv')
+
+# Definir la ruta para la predicción
+@app.get('/predict')
+def predict(metascore: str = Query(None, description='Metascore of the game (0 to 100).'),
+            year: str = Query(None, description='Release year of the game.'),
+            genre: str = Query(None, description='Genre of the game (Action, Adventure, Casual, etc.).')):
+    # Verificar que los valores de metascore y year sean números válidos
+    if metascore is not None and not metascore.isnumeric():
+        raise HTTPException(status_code=422, detail='Invalid metascore. It should be a number.')
+
+    if year is not None and not year.isnumeric():
+        raise HTTPException(status_code=422, detail='Invalid year. It should be a number.')
+
+    # Verificar que el valor de genre esté dentro de los géneros disponibles
+    available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
+                        'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
+    if genre is not None and genre not in available_genres:
+        raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
+
+    # Crear un diccionario con las características ingresadas
+    data = {'metascore': [float(metascore)] if metascore is not None else [0.0],
+            'year': [int(year)] if year is not None else [0]}
+    for genre in df_limpio['genres'].unique():
+        if genre == genre:
+            data[genre] = [1]
+        else:
+            data[genre] = [0]
+
+    # Crear el DataFrame de entrada para la predicción
+    input_df = pd.DataFrame(data)
+
+    # Realizar la predicción con el modelo cargado
+    precio_predicho = model.predict(input_df)
+
+    # Retornar la predicción de precio en formato JSON
+    return {"precio_predicho": precio_predicho[0]}
+
+class Item(BaseModel):
+    genres: str
+    early_access: bool
+from fastapi import FastAPI, Query, HTTPException
+from pydantic import BaseModel
+import pandas as pd
+import pickle
+
+# Cargar el modelo desde el archivo pickle
+with open('modelo.pickle', 'rb') as file:
+    model = pickle.load(file)
+
+# Cargar el DataFrame preprocesado
+df_limpio = pd.read_csv('datos_limpio.csv')
+
+app = FastAPI()
+
+# Definir la clase modelo para los datos de entrada
+class Item(BaseModel):
+    genres: str
+    early_access: bool
+
+# Definir la ruta para la predicción
+@app.get('/predict')
+def predict(item: Item):
+    # Verificar que el valor de genre esté dentro de los géneros disponibles
+    available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
+                        'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
+    if item.genres not in available_genres:
+        raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
+
+    # Crear un diccionario con las características ingresadas
+    data = {'metascore': [0.0],
+            'year': [0]}
+    for genre in df_limpio['genres'].unique():
+        if genre == item.genres:
+            data[genre] = [1]
+        else:
+            data[genre] = [0]
+
+    # Crear el DataFrame de entrada para la predicción
+    input_df = pd.DataFrame(data)
+
+    # Realizar la predicción con el modelo cargado
+    precio_predicho = model.predict(input_df)
+
+    # Retornar la predicción de precio en formato JSON
+    return {"precio_predicho": precio_predicho[0]}
