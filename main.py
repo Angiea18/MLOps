@@ -84,7 +84,7 @@ def sentiment(año: str):
 
     # Eliminar sentimientos que no están en la lista mencionada
     sentimient_valid = ["Mixed", "Positive", "Very Positive", "Mostly Positive",
-                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive"]
+                            "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive", "Overwhelmingly Negative"]
     sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
 
      # Verificar si el diccionario está vacío
