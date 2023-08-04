@@ -145,9 +145,6 @@ class PredictionOutput(BaseModel):
     predicted_price: float
     rmse: float
 
-# Crear una instancia de FastAPI
-app = FastAPI()
-
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
 def predict(item: PredictionInput):
