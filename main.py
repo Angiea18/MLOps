@@ -113,6 +113,7 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
+
 # Cargar el modelo de regresión lineal múltiple desde el archivo con pickle
 modelo_guardado = "modelo_regresion_lineal.pkl"
 with open(modelo_guardado, "rb") as file:
@@ -125,7 +126,7 @@ class PredictionInput(BaseModel):
     genres: str
 
 # Función para realizar la predicción
-def predict_price_and_rmse(year, metascore, genres):
+def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
@@ -140,35 +141,24 @@ def predict_price_and_rmse(year, metascore, genres):
 
     return predicted_price
 
-# Definir el modelo de datos para la salida de la predicción
-class PredictionOutput(BaseModel):
-    predicted_price: float
-    rmse: float
-
 # Ruta para la predicción
-@app.get("/predict/", response_model=PredictionOutput)
+@app.post("/predict/", response_model=dict)
 def predict(item: PredictionInput):
     year = item.year
     metascore = item.metascore
     genres = item.genres
 
-    # Obtener la predicción
-    predicted_price = predict_price_and_rmse(year, metascore, genres)
+    try:
+        # Obtener la predicción
+        predicted_price = predict_price(year, metascore, genres)
 
-    # Calcular el RMSE si tienes las etiquetas verdaderas
-    if y_test is not None:
-        data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
-        data_genres = data["genres"].str.get_dummies(sep=",")
-        data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
-        y_pred = linear_model.predict(data)
-        rmse = mean_squared_error(y_test, y_pred, squared=False)
-    else:
-        rmse = None
+        # Crear un diccionario con el resultado de la predicción
+        result = {
+            "predicted_price": predicted_price,
+            "rmse": None  # Puedes calcular el RMSE aquí si tienes las etiquetas verdaderas para las predicciones
+        }
 
-    # Crear un diccionario con los resultados
-    result = {
-        "predicted_price": predicted_price,
-        "rmse": rmse
-    }
-
-    return result
+        return result
+    except Exception as e:
+        # En caso de error, retornar un error 422 con el mensaje de error
+        raise HTTPException(status_code=422, detail=str(e))
