@@ -113,9 +113,10 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el modelo entrenado
-with open('bagging_model.pkl', 'rb') as model_file:
-    bagging_model = pickle.load(model_file)
+# Cargar el modelo de regresión lineal múltiple desde el archivo con pickle
+modelo_guardado = "modelo_regresion_lineal.pkl"
+with open(modelo_guardado, "rb") as file:
+    linear_model = pickle.load(file)
 
 # Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
 class PredictionInput(BaseModel):
@@ -135,16 +136,18 @@ def predict_price_and_rmse(year, metascore, genres):
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
 
     # Realizar la predicción
-    predicted_price = bagging_model.predict(data)[0]
+    predicted_price = linear_model.predict(data)[0]
 
     return predicted_price
-
 
 # Definir el modelo de datos para la salida de la predicción
 class PredictionOutput(BaseModel):
     predicted_price: float
     rmse: float
-    
+
+# Crear una instancia de FastAPI
+app = FastAPI()
+
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
 def predict(item: PredictionInput):
@@ -155,8 +158,15 @@ def predict(item: PredictionInput):
     # Obtener la predicción
     predicted_price = predict_price_and_rmse(year, metascore, genres)
 
-    # Calcular el RMSE
-    rmse = None  # Puedes calcular el RMSE aquí si tienes las etiquetas verdaderas para las predicciones
+    # Calcular el RMSE si tienes las etiquetas verdaderas
+    if y_test is not None:
+        data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
+        data_genres = data["genres"].str.get_dummies(sep=",")
+        data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
+        y_pred = linear_model.predict(data)
+        rmse = mean_squared_error(y_test, y_pred, squared=False)
+    else:
+        rmse = None
 
     # Crear un diccionario con los resultados
     result = {
