@@ -119,22 +119,30 @@ def metascore(año: str):
 with open('bagging_model.pkl', 'rb') as model_file:
     bagging_model = pickle.load(model_file)
 
+# Lista de valores disponibles para la variable 'genres'
+available_genres = [
+    "Action", "Adventure", "Casual", "Early Access", "Free to Play",
+    "Indie", "Massively Multiplayer", "RPG", "Racing", "Simulation",
+    "Sports", "Strategy", "Video Production"
+]
+
+
 @app.get("/")
 async def read_root():
     return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
 
 @app.get("/predict/")
-async def predict_price(genres: str, metascore: float, year: int):
+async def predict_price(
+    genres: str = Query(..., description="Select the genre from the available options.", example="Action"),
+    metascore: float = Query(..., description="Metascore of the game.", example=85.0),
+    year: int = Query(..., description="Year of the game release.", example=2017)
+):
     # Crear la matriz de características para hacer la predicción
     X = [[metascore, year]]
     # Agregar columnas para los géneros, todas con valor 0 (no seleccionados)
     genres_list = genres.split(",")
-    for genre in genres_list:
-        X[0].append(0)
-    # Codificar los géneros seleccionados con valor 1
-    for genre in genres_list:
-        genre_index = 2 + genres_list.index(genre)
-        X[0][genre_index] = 1
+    for genre in available_genres:
+        X[0].append(1 if genre in genres_list else 0)
 
     # Realizar la predicción utilizando el modelo de Bagging
     predicted_price = bagging_model.predict(X)[0]
