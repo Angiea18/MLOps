@@ -129,12 +129,19 @@ class PredictionInput(BaseModel):
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
-    data = pd.DataFrame([[year, metascore]], columns=["year", "metascore"])
+    data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
     # Obtener las variables dummy de los géneros
-    data_genres = genres.split(',')
-    data_genres = {f"genres_{genre}": 1 for genre in data_genres}
-    data = data.assign(**data_genres)
+    data["genres"] = data["genres"].str.get_dummies(sep=",")
+
+    # Verificar si hay géneros adicionales y agregarlos con valor 0
+    genres_columns = [col for col in X_train.columns if col.startswith("genres_")]
+    for col in genres_columns:
+        if col not in data.columns:
+            data[col] = 0
+
+    # Reorganizar las columnas para que coincidan con el orden del entrenamiento
+    data = data[X_train.columns]
 
     # Realizar la predicción
     predicted_price = linear_model.predict(data)[0]
