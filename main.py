@@ -112,68 +112,82 @@ def metascore(año: str):
 
     return top_juegos_metascore
 
-
-
-
 # Cargar el modelo de regresión lineal múltiple desde el archivo con pickle
 modelo_guardado = "modelo_regresion_lineal.pkl"
 with open(modelo_guardado, "rb") as file:
     linear_model = pickle.load(file)
 
-# Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
-class PredictionInput(BaseModel):
-    year: int
-    metascore: float
-    genres: str
+# Función para obtener las variables dummy de los géneros
+def one_hot_encode(genres):
+    # Convertir la entrada a una Serie
+    genres = pd.Series(genres)
+
+    # Obtener las variables dummy
+    genres_dummies = genres.str.get_dummies(sep=",")
+
+    return genres_dummies
 
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
-    try:
-        # Convertir la entrada a un DataFrame
-        data = pd.DataFrame([[year, metascore]], columns=["year", "metascore"])
+    # Convertir la entrada a un DataFrame
+    data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
-        # Obtener las variables dummy de los géneros
-        data["genres"] = genres.split(',')
-        data["genres"] = data["genres"].apply(lambda x: f"genres_{x}")
+    # Obtener las variables dummy de los géneros
+    data_genres = one_hot_encode(data["genres"])
 
-        # Reorganizar las columnas para que coincidan con el orden del entrenamiento
-        data = data[X_train.columns]
+    # Verificar si hay géneros adicionales y agregarlos con valor 0
+    genres_columns = [col for col in X_train.columns if col.startswith("genres_")]
+    for col in genres_columns:
+        if col not in data_genres.columns:
+            data_genres[col] = 0
 
-        # Realizar la predicción
-        predicted_price = linear_model.predict(data)[0]
+    # Concatenar las variables dummy con el resto de las columnas
+    data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
 
-        return predicted_price
-        
-    except Exception as e:
-        # Manejar la excepción y devolver un mensaje de error adecuado
-        error_message = f"Error en la predicción: {str(e)}"
-        return error_message
+    # Reorganizar las columnas para que coincidan con el orden del entrenamiento
+    data = data[X_train.columns]
 
-# Definir el modelo de datos para la salida de la predicción
-class PredictionOutput(BaseModel):
-    predicted_price: float
-    rmse: float
+    # Realizar la predicción
+    predicted_price = linear_model.predict(data)[0]
+
+    return predicted_price
+
+# Decorador para validar los tipos de datos de la entrada y la salida
+def validate_types(func):
+    def wrapper(*args, **kwargs):
+        # Validar la entrada
+        year, metascore, genres = args
+        assert isinstance(year, int), "El año debe ser un entero"
+        assert isinstance(metascore, float), "El metascore debe ser un decimal"
+        assert isinstance(genres, str), "Los géneros deben ser una cadena"
+
+        # Ejecutar la función original
+        result = func(*args, **kwargs)
+
+        # Validar la salida
+        assert isinstance(result, float), "El precio predicho debe ser un decimal"
+
+        return result
+
+    return wrapper
 
 # Ruta para la predicción
-@app.get("/predict/", response_model=PredictionOutput)
+@app.get("/predict/")
+@validate_types # Aplicar el decorador a la función predict
 def predict(year: int, metascore: float, genres: str):
     # Obtener la predicción
     predicted_price = predict_price(year, metascore, genres)
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
     if y_test is not None:
-        data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
-        data_genres = data["genres"].str.get_dummies(sep=",")
-        data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
+        data_genres = one_hot_encode(genres)
+        data = pd.concat([pd.DataFrame([[year, metascore]], columns=["year", "metascore"]), data_genres], axis=1)
         y_pred = linear_model.predict(data)
         rmse = mean_squared_error(y_test, y_pred, squared=False)
     else:
         rmse = None
 
-    # Crear un diccionario con los resultados
-    result = {
-        "predicted_price": predicted_price,
-        "rmse": rmse
-    }
+    # Formatear el resultado de la predicción con f-strings
+    result = f"El precio predicho es {predicted_price:.2f} dólares. El RMSE es {rmse:.2f}."
 
     return result
