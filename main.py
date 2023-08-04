@@ -156,6 +156,9 @@ def predict_price(year, metascore, genres):
     for column in missing_columns:
         data_genres[column] = 0
 
+    # Reindexar las columnas para asegurarnos de que tengan el mismo orden que durante el entrenamiento
+    data_genres = data_genres.reindex(columns=df2.filter(like="genres_").columns, fill_value=0)
+
     # Concatenar las variables dummy con el resto de las columnas
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
 
