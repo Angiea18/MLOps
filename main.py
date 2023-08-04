@@ -120,25 +120,6 @@ modelo_guardado = "modelo_regresion_lineal.pkl"
 with open(modelo_guardado, "rb") as file:
     linear_model = pickle.load(file)
 
-# Eliminar filas con valores faltantes en las columnas de interés
-df2 = df2.dropna(subset=["genres", "metascore", "year"])
-
-# Convertir las variables categóricas a numéricas usando one-hot encoding
-# Pero primero, si la columna "genres" contiene listas de géneros, vamos a desglosar esas listas
-df2 = df2.explode("genres")
-
-# Ahora aplicamos el one-hot encoding
-df2 = pd.get_dummies(df2, columns=["genres"], drop_first=True)
-
-# Dividir los datos en conjuntos de entrenamiento y prueba
-X = df2[["metascore", "year"] + df2.filter(like="genres_").columns.tolist()]
-y = df2["price"]  # Aquí debes elegir la columna que quieres predecir (en este caso he usado "price")
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Entrenar el modelo de regresión lineal múltiple con los mismos datos de entrenamiento
-linear_model.fit(X_train, y_train)
-
 # Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
 class PredictionInput(BaseModel):
     year: int
