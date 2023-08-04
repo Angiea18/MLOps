@@ -118,7 +118,10 @@ def metascore(año: str):
 with open('bagging_model.pkl', 'rb') as file:
     bagging_model = pickle.load(file)
 
-@app.post("/prediccion/")
+# Crear la aplicación FastAPI
+app = FastAPI()
+
+@app.get("/prediccion/")
 def predict_price(genre: str = Form(...), metascore: float = Form(...), year: int = Form(...)):
     # Crear el dataframe de géneros dummy con la opción seleccionada
     genres_dummy = pd.DataFrame({genre: 1}, index=[0], columns=df2_genres_dummies.columns).fillna(0)
@@ -130,4 +133,4 @@ def predict_price(genre: str = Form(...), metascore: float = Form(...), year: in
     predicted_price = bagging_model.predict(X_input)[0]
 
     # Devolver el resultado como JSON
-
+    return {"precio": predicted_price, "RMSE": rmse}
