@@ -119,8 +119,6 @@ def metascore(año: str):
 with open('modelo.pickle', 'rb') as file:
     model = pickle.load(file)
 
-app = FastAPI()
-
 # Definir la clase modelo para los datos de entrada
 class Item(BaseModel):
     year: int
