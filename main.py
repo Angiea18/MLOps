@@ -116,6 +116,72 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
+# Asegurarse de que 'release_date' sea de tipo datetime
+df_limpio['release_date'] = pd.to_datetime(df_limpio['release_date'])
+
+def train_bagging_model(genres, metascore, year):
+    # Filtrar los registros con valores no nulos en la columna 'genres'
+    df_filtrado = df_limpio[df_limpio['genres'].notnull()]
+
+    # Paso 1: Filtrar el DataFrame según el género y la disponibilidad anticipada
+    df_filtrado = df_filtrado[(df_filtrado['genres'].apply(lambda x: genres in x if isinstance(x, list) else False))]
+
+    # Paso 2: Preparar los datos (asegúrate de haber realizado las transformaciones previas)
+    df_filtrado['year'] = df_filtrado['release_date'].dt.year  # Crear una nueva columna 'year' con el año extraído de 'release_date'
+    X = df_filtrado[['metascore', 'year']]  # Incluir las variables metascore, year y early_access
+
+    # Obtener todos los géneros únicos presentes en el DataFrame
+    all_genres = set()
+    for genre_list in df_filtrado['genres']:
+        if isinstance(genre_list, list):
+            all_genres.update(genre_list)
+    all_genres = sorted(list(all_genres))
+
+    # Crear columnas para cada género utilizando one-hot encoding con prefijo 'genre'
+    genres_encoded = pd.get_dummies(df_filtrado['genres'].apply(pd.Series).stack(), prefix='genre').groupby(level=0).sum()
+
+    # Combinar las características codificadas con la matriz X
+    X = pd.concat([X, genres_encoded], axis=1)
+
+    y = df_filtrado['price']
+
+    # Eliminar filas con valores faltantes
+    X.dropna(inplace=True)
+    y = y[X.index]
+
+    # Paso 3: Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Paso 4: Crear el modelo base de regresión lineal
+    base_model = LinearRegression()
+
+    # Paso 5: Crear el modelo de Bagging utilizando el modelo base
+    bagging_model = BaggingRegressor(base_model, n_estimators=10, random_state=42)
+
+    # Paso 6: Entrenar el modelo de Bagging con los datos de entrenamiento
+    bagging_model.fit(X_train, y_train)
+
+    # Paso 7: Realizar predicciones con el modelo de Bagging
+    y_test_pred = bagging_model.predict(X_test)
+
+    # Paso 8: Calcular el RMSE
+    rmse = mean_squared_error(y_test, y_test_pred, squared=False)
+
+    # Guardar el modelo entrenado utilizando pickle
+    with open('bagging_model.pkl', 'wb') as model_file:
+        pickle.dump(bagging_model, model_file)
+
+    return rmse
+
+# Ejemplo de uso:
+genero_elegido = 'Action'
+metascore_elegido = 85.0
+year_elegido = 2017
+
+rmse_result = train_bagging_model(genero_elegido, metascore_elegido, year_elegido)
+print("RMSE del modelo de Bagging:", rmse_result)
+
+
 # Cargar el modelo entrenado con pickle
 with open('bagging_model.pkl', 'rb') as model_file:
     bagging_model = pickle.load(model_file)
