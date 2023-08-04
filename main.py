@@ -124,9 +124,9 @@ async def read_root():
     return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
 
 @app.get("/predict/")
-async def predict_price(genres: str, metascore: float, year: int, early_access: bool):
+async def predict_price(genres: str, metascore: float, year: int):
     # Crear la matriz de características para hacer la predicción
-    X = [[metascore, year, early_access]]
+    X = [[metascore, year]]
     # Agregar columnas para los géneros, todas con valor 0 (no seleccionados)
     genres_list = genres.split(",")
     for genre in genres_list:
