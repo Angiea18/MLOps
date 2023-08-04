@@ -13,7 +13,7 @@ import pickle
 
 
 # Indicamos título y descripción de la API
-app = FastAPI(title='PI N°1 (MLOps) -Angie Arango Zapata DTS13')
+app = FastAPI(title='PI (MLOps) -Angie Arango')
 
 #Dataset
 games = []
