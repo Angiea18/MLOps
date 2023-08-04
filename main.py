@@ -121,30 +121,48 @@ with open('modelo.pickle', 'rb') as file:
 
 # Definir la clase modelo para los datos de entrada
 class Item(BaseModel):
-    genres: str
+    genre: str
     early_access: bool
+    release_date: int
+    metascore: float
+
+# Definir la ruta para el entrenamiento del modelo
+@app.post('/train')
+def train(item: Item):
+    global model, rmse
+    model, rmse = train_model(item.genre, item.early_access, item.release_date, item.metascore)
+    return {"message": "Model trained successfully. RMSE: {}".format(rmse)}
+
+# Cargar el modelo desde el archivo pickle
+with open('modelo.pickle', 'rb') as file:
+    model = pickle.load(file)
 
 # Definir la ruta para la predicción
 @app.get('/predict')
 def predict(item: Item):
+    global model
+
     # Verificar que el valor de genre esté dentro de los géneros disponibles
     available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
                         'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
-    if item.genres not in available_genres:
+    if item.genre not in available_genres:
         raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
 
     # Crear un diccionario con las características ingresadas
-    data = {'early_access': [item.early_access]}
+    data = {'early_access': [item.early_access],
+            'release_date': [item.release_date],
+            'metascore': [item.metascore]}
     for genre in df_limpio['genres'].unique():
-        data[genre] = [1 if genre in item.genres else 0]
+        data[genre] = [1 if genre in item.genre else 0]
 
     # Crear el DataFrame de entrada para la predicción
     input_df = pd.DataFrame(data)
-    input_df.drop(columns=['early_access'], inplace=True)
 
     # Realizar la predicción con el modelo cargado
     precio_predicho = model.predict(input_df)
 
     # Retornar la predicción de precio y el RMSE en formato JSON
-    return {"precio_predicho": precio_predicho[0], "rmse": rmse}
+    result = {"precio_predicho": precio_predicho[0], "rmse": rmse}
+
+    return result
 
