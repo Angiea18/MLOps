@@ -115,7 +115,7 @@ def metascore(año: str):
 
     return top_juegos_metascore
 
-
+df_limpio = pd.read_csv('datosML.csv')
 # Asegurarse de que 'release_date' sea de tipo datetime
 df_limpio['release_date'] = pd.to_datetime(df_limpio['release_date'])
 
