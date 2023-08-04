@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Predicciones de precios de juegos</title>
+</head>
+<body>
+    <h1>¡Bienvenido a la API de predicciones de precios de juegos!</h1>
+    <form action="/predict/" method="get">
+        <label for="genres">Género:</label>
+        <select name="genres" id="genres">
+            {% for genre in available_genres %}
+                <option value="{{ genre }}">{{ genre }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="metascore">Metascore:</label>
+        <input type="number" name="metascore" id="metascore" step="0.1" required>
+        <br>
+        <label for="year">Año de lanzamiento:</label>
+        <input type="number" name="year" id="year" required>
+        <br>
+        <input type="submit" value="Obtener predicción">
+    </form>
+</body>
+</html>
