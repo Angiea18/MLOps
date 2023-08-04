@@ -137,9 +137,12 @@ class Genre(str, Enum):
 
 # Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
 class PredictionInput(BaseModel):
-    year: int
-    metascore: float
+    year: int = Query(..., ge=0)
+    metascore: float = Query(..., ge=0)
     genres: Genre  # Utilizamos el Enum para los géneros
+
+# Cargar el DataFrame df2 con tus datos
+df2 = pd.read_csv('df2.csv')
 
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
@@ -173,14 +176,12 @@ def predict(year: int, metascore: float, genres: Genre):
     predicted_price = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
-    if y_test is not None:
-        data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
-        data_genres = data["genres"].str.get_dummies(sep=",")
-        data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
-        y_pred = linear_model.predict(data)
-        rmse = mean_squared_error(y_test, y_pred, squared=False)
-    else:
-        rmse = None
+    y_test = df2["price"]
+    data = pd.DataFrame([[year, metascore, genres.value]], columns=["year", "metascore", "genres"])
+    data_genres = data["genres"].str.get_dummies(sep=",")
+    data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
+    y_pred = linear_model.predict(data)
+    rmse = mean_squared_error(y_test, y_pred, squared=False)
 
     # Crear un diccionario con los resultados
     result = {
