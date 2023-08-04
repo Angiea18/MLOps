@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import BaggingRegressor
 from pydantic import BaseModel
+from enum import Enum
 import pickle
 
 # Indicamos título y descripción de la API
@@ -118,11 +119,27 @@ modelo_guardado = "modelo_regresion_lineal.pkl"
 with open(modelo_guardado, "rb") as file:
     linear_model = pickle.load(file)
 
+# Definir el Enum para los géneros disponibles
+class Genre(str, Enum):
+    Action = "Action"
+    Adventure = "Adventure"
+    Casual = "Casual"
+    Early_Access = "Early Access"
+    Free_to_Play = "Free to Play"
+    Indie = "Indie"
+    Massively_Multiplayer = "Massively Multiplayer"
+    RPG = "RPG"
+    Racing = "Racing"
+    Simulation = "Simulation"
+    Sports = "Sports"
+    Strategy = "Strategy"
+    Video_Production = "Video Production"
+
 # Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
 class PredictionInput(BaseModel):
     year: int
     metascore: float
-    genres: str
+    genres: Genre  # Utilizamos el Enum para los géneros
 
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
@@ -149,11 +166,14 @@ class PredictionOutput(BaseModel):
     predicted_price: float
     rmse: float
 
+# Crear la instancia de la aplicación FastAPI
+app = FastAPI()
+
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
-def predict(year: int, metascore: float, genres: str):
+def predict(year: int, metascore: float, genres: Genre):
     # Obtener la predicción
-    predicted_price = predict_price(year, metascore, genres)
+    predicted_price = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
     if y_test is not None:
