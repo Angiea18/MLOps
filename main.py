@@ -119,43 +119,33 @@ def metascore(año: str):
 with open('modelo.pickle', 'rb') as file:
     model = pickle.load(file)
 
+app = FastAPI()
+
 # Definir la clase modelo para los datos de entrada
 class Item(BaseModel):
-    genre: str
-    early_access: bool
-    release_date: int
+    year: int
     metascore: float
-
-# Definir la ruta para el entrenamiento del modelo
-@app.post('/train')
-def train(item: Item):
-    global model, rmse
-    model, rmse = train_model(item.genre, item.early_access, item.release_date, item.metascore)
-    return {"message": "Model trained successfully. RMSE: {}".format(rmse)}
-
-# Cargar el modelo desde el archivo pickle
-with open('modelo.pickle', 'rb') as file:
-    model = pickle.load(file)
+    early_access: bool
+    Action: int
+    Adventure: int
+    Casual: int
+    Indie: int
+    Simulation: int
+    Strategy: int
 
 # Definir la ruta para la predicción
-@app.get('/predict')
+@app.post('/predict')
 def predict(item: Item):
-    global model
-
-    # Verificar que el valor de genre esté dentro de los géneros disponibles
-    available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
-                        'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
-    if item.genre not in available_genres:
-        raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
-
-    # Crear un diccionario con las características ingresadas
-    data = {'early_access': [item.early_access],
-            'release_date': [item.release_date],
-            'metascore': [item.metascore]}
-    for genre in df_limpio['genres'].unique():
-        data[genre] = [1 if genre in item.genre else 0]
-
-    # Crear el DataFrame de entrada para la predicción
+    # Crear un DataFrame con los datos ingresados
+    data = {'year': [item.year],
+            'metascore': [item.metascore],
+            'early_access': [item.early_access],
+            'Action': [item.Action],
+            'Adventure': [item.Adventure],
+            'Casual': [item.Casual],
+            'Indie': [item.Indie],
+            'Simulation': [item.Simulation],
+            'Strategy': [item.Strategy]}
     input_df = pd.DataFrame(data)
 
     # Realizar la predicción con el modelo cargado
@@ -163,6 +153,6 @@ def predict(item: Item):
 
     # Retornar la predicción de precio y el RMSE en formato JSON
     result = {"precio_predicho": precio_predicho[0], "rmse": rmse}
-
     return result
+
 
