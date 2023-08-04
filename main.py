@@ -127,7 +127,8 @@ class PredictionInput(BaseModel):
     genres: str
 
 # Función para realizar la predicción
-def predict_price(year:int, metascore:float, genres:str):
+def metascore(año: str):
+def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
@@ -155,7 +156,7 @@ def predict(item: PredictionInput):
     genres = item.genres
 
     # Obtener la predicción
-    predicted_price = predict_price(year:int, metascore:float, genres:str)
+    predicted_price = predict_price(year, metascore, genres)
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
     if y_test is not None:
