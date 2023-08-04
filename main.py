@@ -112,23 +112,3 @@ def metascore(año: str):
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
     return top_juegos_metascore
-
-
-# Cargar el modelo entrenado desde el archivo 'bagging_model.pkl'
-with open('bagging_model.pkl', 'rb') as file:
-    bagging_model = pickle.load(file)
-
-
-@app.get("/prediccion/")
-def predict_price(genre: str, metascore: float, year: int):
-    # Crear el dataframe de géneros dummy con la opción seleccionada
-    genres_dummy = pd.DataFrame({genre: 1}, index=[0], columns=df2_genres_dummies.columns).fillna(0)
-
-    # Crear el arreglo con las variables independientes (dummy de géneros, year y metascore)
-    X_input = np.array([[year, metascore] + list(genres_dummy.values[0])])
-
-    # Realizar la predicción
-    predicted_price = bagging_model.predict(X_input)[0]
-
-    # Devolver el resultado como JSON
-    return {"precio": predicted_price, "RMSE": rmse}
