@@ -129,8 +129,12 @@ def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
-    # Obtener las variables dummy de los géneros
+    # Obtener las variables dummy de los géneros de la misma manera que se hizo durante el entrenamiento
     data_genres = data["genres"].str.get_dummies(sep=",")
+    genre_columns = data_genres.columns.tolist()
+    missing_columns = set(df2.filter(like="genres_").columns.tolist()) - set(genre_columns)
+    for column in missing_columns:
+        data_genres[column] = 0
 
     # Concatenar las variables dummy con el resto de las columnas
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
