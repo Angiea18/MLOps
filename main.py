@@ -120,28 +120,6 @@ def metascore(año: str):
 with open('bagging_model.pkl', 'rb') as model_file:
     bagging_model = pickle.load(model_file)
     
-templates = Jinja2Templates(directory="templates")
-
-# Lista de valores disponibles para la variable 'genres'
-class Genre(str, Enum):
-    Action = "Action"
-    Adventure = "Adventure"
-    Casual = "Casual"
-    Early_Access = "Early Access"
-    Free_to_Play = "Free to Play"
-    Indie = "Indie"
-    Massively_Multiplayer = "Massively Multiplayer"
-    RPG = "RPG"
-    Racing = "Racing"
-    Simulation = "Simulation"
-    Sports = "Sports"
-    Strategy = "Strategy"
-    Video_Production = "Video Production"
-
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "available_genres": Genre})
-    
 @app.get("/")
 async def read_root():
     return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
