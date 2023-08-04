@@ -135,8 +135,7 @@ class Genre(str, Enum):
     Simulation = "Simulation"
     Sports = "Sports"
     Strategy = "Strategy"
-    Video_Production = "Video Production"
-]
+    Video_Production = "Video Production"]
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
