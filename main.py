@@ -115,53 +115,37 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el DataFrame preprocesado
-df_limpio = pd.read_csv('datos_limpio.csv')
+# Cargar el modelo entrenado con pickle
+with open('bagging_model.pkl', 'rb') as model_file:
+    bagging_model = pickle.load(model_file)
 
-# Definir la clase modelo para los datos de entrada
-class Item(BaseModel):
-    genre: str
-    early_access: bool
-    year: int
-    metascore: float
+@app.get("/")
+async def read_root():
+    return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
 
+@app.get("/predict/")
+async def predict_price(genres: str, metascore: float, year: int, early_access: bool):
+    # Crear la matriz de características para hacer la predicción
+    X = [[metascore, year, early_access]]
+    # Agregar columnas para los géneros, todas con valor 0 (no seleccionados)
+    genres_list = genres.split(",")
+    for genre in genres_list:
+        X[0].append(0)
+    # Codificar los géneros seleccionados con valor 1
+    for genre in genres_list:
+        X[0][3 + genre_list.index(genre)] = 1
 
-# Definir la ruta para el entrenamiento del modelo
-@app.post('/train')
-def train(item: Item):
-    global model, rmse
-    model, rmse = train_model(item.genre, item.early_access, item.release_date, item.metascore)
-    return {"message": "Model trained successfully. RMSE: {}".format(rmse)}
+    # Realizar la predicción utilizando el modelo de Bagging
+    predicted_price = bagging_model.predict(X)[0]
 
-# Cargar el modelo desde el archivo pickle
-with open('modelo.pickle', 'rb') as file:
-    model = pickle.load(file)
+    # Calcular el RMSE para mostrarlo en la respuesta
+    rmse_result = 0.0  # Asegurémonos de que sea un valor numérico
+    try:
+        # Cargar el RMSE del archivo de texto (si existe)
+        with open('bagging_rmse.txt', 'r') as rmse_file:
+            rmse_result = float(rmse_file.read())
+    except FileNotFoundError:
+        pass
 
-# Definir la ruta para la predicción
-@app.get('/predict')
-def predict(item: Item):
-    global model
+    return {"predicted_price": predicted_price, "rmse": rmse_result}
 
-    # Verificar que el valor de genre esté dentro de los géneros disponibles
-    available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
-                        'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
-    if item.genre not in available_genres:
-        raise HTTPException(status_code=422, detail='Invalid genre. It should be one of the available genres.')
-
-    # Crear un diccionario con las características ingresadas
-    data = {'early_access': [item.early_access],
-            'release_date': [item.release_date],
-            'metascore': [item.metascore]}
-    for genre in df_limpio['genres'].unique():
-        data[genre] = [1 if genre in item.genre else 0]
-
-    # Crear el DataFrame de entrada para la predicción
-    input_df = pd.DataFrame(data)
-
-    # Realizar la predicción con el modelo cargado
-    precio_predicho = model.predict(input_df)
-
-    # Retornar la predicción de precio y el RMSE en formato JSON
-    result = {"precio_predicho": precio_predicho[0], "rmse": rmse}
-
-    return result
