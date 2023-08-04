@@ -120,7 +120,7 @@ with open('bagging_model.pkl', 'rb') as file:
 
 
 @app.get("/prediccion/")
-def predict_price(genre: str, metascore: float, year: int)):
+def predict_price(genre: str, metascore: float, year: int):
     # Crear el dataframe de géneros dummy con la opción seleccionada
     genres_dummy = pd.DataFrame({genre: 1}, index=[0], columns=df2_genres_dummies.columns).fillna(0)
 
