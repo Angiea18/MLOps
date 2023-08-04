@@ -112,3 +112,38 @@ def metascore(año: str):
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
     return top_juegos_metascore
+
+
+# Cargar el modelo desde el archivo pickle
+with open('bagging_model.pickle', 'rb') as f:
+    loaded_model = pickle.load(f)
+
+# Definir la función de predicción
+def prediccion(year, metascore, genres):
+    # Convertir los géneros a one-hot encoding
+    genres_encoded = [0] * len(df2.filter(like="genres_").columns.tolist())
+    for genre in genres:
+        if genre in df2.filter(like="genres_").columns.tolist():
+            genres_encoded[df2.filter(like="genres_").columns.tolist().index(genre)] = 1
+    
+    # Realizar la predicción con el modelo cargado
+    features = [metascore, year] + genres_encoded
+    price_pred = loaded_model.predict([features])[0]
+    
+    # Calcular el RMSE en el conjunto de prueba (solo para propósitos informativos)
+    y_pred_loaded = loaded_model.predict(X_test)
+    rmse = mean_squared_error(y_test, y_pred_loaded, squared=False)
+    
+    return price_pred, rmse
+
+# Ruta para realizar la predicción
+@app.get("/prediccion/")
+async def get_prediction(year: float, metascore: float, genres: str):
+    # Convertir los géneros a una lista
+    genres_list = genres.split(",")
+    
+    # Realizar la predicción
+    price_pred, rmse = prediccion(year, metascore, genres_list)
+    
+    # Devolver el resultado en formato JSON
+    return {"price": price_pred, "rmse": rmse}
