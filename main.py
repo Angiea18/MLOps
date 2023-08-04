@@ -126,26 +126,28 @@ class PredictionInput(BaseModel):
 
 # Función para realizar la predicción
 def predict_price_and_rmse(year, metascore, genres):
-    # Convertir la entrada a un DataFrame para realizar el one-hot encoding
+    # Convertir la entrada a un DataFrame
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
-    data = data.explode("genres")
-    data = pd.get_dummies(data, columns=["genres"], drop_first=True)
 
-    # Asegurarse de que todas las columnas necesarias para one-hot encoding estén presentes
-    missing_cols = set(df2.filter(like="genres_").columns) - set(data.columns)
-    for col in missing_cols:
-        data[col] = 0
+    # Obtener las variables dummy de los géneros
+    data_genres = data["genres"].str.get_dummies(sep=",")
 
-    # Reordenar las columnas en el mismo orden que se usó en el entrenamiento
-    data = data[df2.filter(like="genres_").columns]
+    # Concatenar las variables dummy con el resto de las columnas
+    data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
 
     # Realizar la predicción
     predicted_price = bagging_model.predict(data)[0]
 
     return predicted_price
 
+
+# Definir el modelo de datos para la salida de la predicción
+class PredictionOutput(BaseModel):
+    predicted_price: float
+    rmse: float
+    
 # Ruta para la predicción
-@app.post("/predict/")
+@app.get("/predict/", response_model=PredictionOutput)
 def predict(item: PredictionInput):
     year = item.year
     metascore = item.metascore
