@@ -114,9 +114,9 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el modelo entrenado
+# Cargar el modelo desde el archivo pickle
 with open('bagging_model.pkl', 'rb') as model_file:
-    bagging_model = pickle.load(model_file)
+    loaded_model = pickle.load(model_file)
 
 # Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
 class PredictionInput(BaseModel):
