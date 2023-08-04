@@ -114,37 +114,26 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el modelo entrenado con pickle
-with open('bagging_model.pkl', 'rb') as model_file:
-    bagging_model = pickle.load(model_file)
-    
-@app.get("/predict/")
-async def predict_price(genres: str, metascore: float, year: int):
-    # Crear la matriz de características para hacer la predicción
-    X = [[metascore, year]]
+# Cargar el modelo entrenado desde el archivo 'bagging_model.pkl'
+with open('bagging_model.pkl', 'rb') as file:
+    bagging_model = pickle.load(file)
 
-    # Obtener todos los géneros únicos presentes en el DataFrame
-    all_genres = [
-        'Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
-        'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production'
-    ]
+@app.get("/")
+async def read_root():
+    return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
 
-    # Agregar columnas para los géneros, todas con valor 0 (no seleccionados)
-    genres_list = genres.split(",")
-    for genre in all_genres:
-        X[0].append(1 if genre in genres_list else 0)
+# Definir la ruta para la predicción
+@app.get("/prediccion/")
+def predict_price(metascore: float, year: int, genres: list):
+    # Crear un arreglo con los valores de géneros dummy a partir de la lista de géneros recibida
+    genres_dummy = [1 if genre in genres else 0 for genre in df2_genres_dummies.columns]
 
-    # Realizar la predicción utilizando el modelo de Bagging
-    predicted_price = bagging_model.predict(X)[0]
+    # Crear el arreglo con las variables independientes (dummy de géneros, year y metascore)
+    X_input = np.array([[year, metascore] + genres_dummy])
 
-    # Calcular el RMSE para mostrarlo en la respuesta
-    rmse_result = 0.0  # Asegurémonos de que sea un valor numérico
-    try:
-        # Cargar el RMSE del archivo de texto (si existe)
-        with open('bagging_rmse.txt', 'r') as rmse_file:
-            rmse_result = float(rmse_file.read())
-    except FileNotFoundError:
-        pass
+    # Realizar la predicción
+    predicted_price = bagging_model.predict(X_input)[0]
 
-    return {"predicted_price": predicted_price, "rmse": rmse_result}
+    # Devolver el resultado
+    return {"precio": predicted_price, "RMSE": rmse}
 
