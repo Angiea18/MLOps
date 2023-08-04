@@ -133,7 +133,8 @@ async def predict_price(genres: str, metascore: float, year: int):
         X[0].append(0)
     # Codificar los géneros seleccionados con valor 1
     for genre in genres_list:
-        X[0][3 + genre_list.index(genre)] = 1
+        genre_index = 2 + genres_list.index(genre)
+        X[0][genre_index] = 1
 
     # Realizar la predicción utilizando el modelo de Bagging
     predicted_price = bagging_model.predict(X)[0]
