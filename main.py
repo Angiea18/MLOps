@@ -112,20 +112,17 @@ def metascore(año: str):
 
     return top_juegos_metascore
 
+
 # Cargar el modelo de regresión lineal múltiple desde el archivo con pickle
 modelo_guardado = "modelo_regresion_lineal.pkl"
 with open(modelo_guardado, "rb") as file:
     linear_model = pickle.load(file)
 
-# Función para obtener las variables dummy de los géneros
-def one_hot_encode(genres):
-    # Convertir la entrada a una Serie
-    genres = pd.Series(genres)
-
-    # Obtener las variables dummy
-    genres_dummies = genres.str.get_dummies(sep=",")
-
-    return genres_dummies
+# Definir el modelo de datos para recibir la información en el cuerpo de las solicitudes
+class PredictionInput(BaseModel):
+    year: int
+    metascore: float
+    genres: str
 
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
@@ -133,61 +130,41 @@ def predict_price(year, metascore, genres):
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
     # Obtener las variables dummy de los géneros
-    data_genres = one_hot_encode(data["genres"])
-
-    # Verificar si hay géneros adicionales y agregarlos con valor 0
-    genres_columns = [col for col in X_train.columns if col.startswith("genres_")]
-    for col in genres_columns:
-        if col not in data_genres.columns:
-            data_genres[col] = 0
+    data_genres = data["genres"].str.get_dummies(sep=",")
 
     # Concatenar las variables dummy con el resto de las columnas
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
-
-    # Reorganizar las columnas para que coincidan con el orden del entrenamiento
-    data = data[X_train.columns]
 
     # Realizar la predicción
     predicted_price = linear_model.predict(data)[0]
 
     return predicted_price
 
-# Decorador para validar los tipos de datos de la entrada y la salida
-def validate_types(func):
-    def wrapper(*args, **kwargs):
-        # Validar la entrada
-        year, metascore, genres = args
-        assert isinstance(year, int), "El año debe ser un entero"
-        assert isinstance(metascore, float), "El metascore debe ser un decimal"
-        assert isinstance(genres, str), "Los géneros deben ser una cadena"
-
-        # Ejecutar la función original
-        result = func(*args, **kwargs)
-
-        # Validar la salida
-        assert isinstance(result, float), "El precio predicho debe ser un decimal"
-
-        return result
-
-    return wrapper
+# Definir el modelo de datos para la salida de la predicción
+class PredictionOutput(BaseModel):
+    predicted_price: float
+    rmse: float
 
 # Ruta para la predicción
-@app.get("/predict/")
-@validate_types # Aplicar el decorador a la función predict
+@app.get("/predict/", response_model=PredictionOutput)
 def predict(year: int, metascore: float, genres: str):
     # Obtener la predicción
     predicted_price = predict_price(year, metascore, genres)
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
     if y_test is not None:
-        data_genres = one_hot_encode(genres)
-        data = pd.concat([pd.DataFrame([[year, metascore]], columns=["year", "metascore"]), data_genres], axis=1)
+        data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
+        data_genres = data["genres"].str.get_dummies(sep=",")
+        data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
         y_pred = linear_model.predict(data)
         rmse = mean_squared_error(y_test, y_pred, squared=False)
     else:
         rmse = None
 
-    # Formatear el resultado de la predicción con f-strings
-    result = f"El precio predicho es {predicted_price:.2f} dólares. El RMSE es {rmse:.2f}."
+    # Crear un diccionario con los resultados
+    result = {
+        "predicted_price": predicted_price,
+        "rmse": rmse
+    }
 
     return result
