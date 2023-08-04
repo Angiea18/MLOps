@@ -127,7 +127,7 @@ class PredictionInput(BaseModel):
     genres: str
 
 # Función para realizar la predicción
-def predict_price(year, metascore, genres):
+def predict_price(year:int, metascore:float, genres:str):
     # Convertir la entrada a un DataFrame
     data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
 
