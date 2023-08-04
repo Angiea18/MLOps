@@ -155,7 +155,7 @@ def predict(item: PredictionInput):
     genres = item.genres
 
     # Obtener la predicción
-    predicted_price = predict_price(year, metascore, genres)
+    predicted_price = predict_price(year:int, metascore:float, genres:str)
 
     # Calcular el RMSE si tienes las etiquetas verdaderas
     if y_test is not None:
