@@ -119,21 +119,26 @@ def metascore(año: str):
 # Cargar el modelo entrenado con pickle
 with open('bagging_model.pkl', 'rb') as model_file:
     bagging_model = pickle.load(model_file)
-    
+
+# Lista de valores disponibles para el género
+available_genres = ['Action', 'Adventure', 'Casual', 'Early Access', 'Free to Play', 'Indie',
+                    'Massively Multiplayer', 'RPG', 'Racing', 'Simulation', 'Sports', 'Strategy', 'Video Production']
+
 @app.get("/")
 async def read_root():
     return {"message": "¡Bienvenido a la API de predicciones de precios de juegos!"}
 
 @app.get("/predict/")
-async def predict_price(
-    genres: str = Query(..., description="Select the genre from the available options.", example="Action"),
-    metascore: float = Query(..., description="Metascore of the game.", example=85.0),
-    year: int = Query(..., description="Year of the game release.", example=2017)
-):
+async def predict_price(genres: str, metascore: float, year: int):
+    # Verificar que el valor de género esté dentro de los géneros disponibles
+    genres_list = genres.split(",")
+    for genre in genres_list:
+        if genre not in available_genres:
+            raise HTTPException(status_code=422, detail=f"Invalid genre: {genre}. It should be one of the available genres.")
+
     # Crear la matriz de características para hacer la predicción
     X = [[metascore, year]]
     # Agregar columnas para los géneros, todas con valor 0 (no seleccionados)
-    genres_list = genres.split(",")
     for genre in available_genres:
         X[0].append(1 if genre in genres_list else 0)
 
