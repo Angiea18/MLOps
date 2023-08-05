@@ -139,6 +139,9 @@ class Genre(str, Enum):
 # Cargar el DataFrame df2 con tus datos
 df2 = pd.read_csv('df2.csv')
 
+# Definir X_train como las características utilizadas para entrenar el modelo
+X_train = df2[["metascore", "year"] + df2.filter(like="genres_").columns.tolist()]
+
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
