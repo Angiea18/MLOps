@@ -114,7 +114,7 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el modelo Bagging desde el archivo
+# Cargar el modelo de Bagging desde el archivo con pickle
 modelo_guardado = "modelo_bagging.pkl"
 with open(modelo_guardado, "rb") as file:
     bagging_model = pickle.load(file)
@@ -134,18 +134,19 @@ class Genre(str, Enum):
     Sports = "Sports"
     Strategy = "Strategy"
     Video_Production = "Video Production"
+   
 
 # Cargar el DataFrame df2 con tus datos
 df2 = pd.read_csv('df2.csv')
 
-# Definir X_train y y_train como las características y la variable objetivo utilizadas para entrenar el modelo
-X_train = df2[["year", "early_access"] + df2.filter(like="genres_").columns.tolist()]
+# Definir X_train como las características utilizadas para entrenar el modelo
+X_train = df2[["metascore", "year"] + df2.filter(like="genres_").columns.tolist()]
 y_train = df2["price"]
 
 # Función para realizar la predicción
-def predict_price(year, early_access, genres):
+def predict_price(metascore, year, genres):
     # Convertir la entrada a un DataFrame
-    data = pd.DataFrame([[year, early_access, ",".join(genres)]], columns=["early_access", "year", "genres"])
+    data = pd.DataFrame([[metascore, year, ",".join(genres)]], columns=["metascore", "year", "genres"])
 
     # Obtener las variables dummy de los géneros de la misma manera que se hizo durante el entrenamiento
     data_genres = data["genres"].str.get_dummies(sep=",")
@@ -159,7 +160,7 @@ def predict_price(year, early_access, genres):
     data_genres = data_genres[X_train.filter(like="genres_").columns]
 
     # Concatenar las variables dummy con el resto de las columnas
-    data = pd.concat([data[["year", "early_access"]], data_genres], axis=1)
+    data = pd.concat([data[["metascore", "year"]], data_genres], axis=1)
 
     # Realizar la predicción con el modelo de Bagging
     predicted_price = bagging_model.predict(data)[0]
@@ -175,14 +176,11 @@ class PredictionOutput(BaseModel):
     predicted_price: float
     rmse: float
 
-# Crear una instancia de FastAPI
-app = FastAPI()
-
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
-def predict(year: int,early_access: bool, genres: Genre = None):
+def predict(metascore: float, year: int, genres: Genre = None):
     # Obtener la predicción y el RMSE
-    predicted_price, rmse_train = predict_price(year, early_access, genres.value)  # genres.value obtiene el valor del Enum
+    predicted_price, rmse_train = predict_price(metascore, year, genres.value)  # genres.value obtiene el valor del Enum
 
     # Crear un diccionario con el resultado
     result = {
