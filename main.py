@@ -133,6 +133,7 @@ class Genre(str, Enum):
     Simulation = "Simulation"
     Sports = "Sports"
     Strategy = "Strategy"
+    Video_Production = "Video Production"
    
 
 # Cargar el DataFrame df2 con tus datos
@@ -164,7 +165,7 @@ class PredictionOutput(BaseModel):
 
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
-def predict(year: int, metascore: float, genres: Genre = None):
+def predict(year: int, metascore: float, genres: Genre):
     # Obtener la predicción
     predicted_price = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
 
