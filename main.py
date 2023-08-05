@@ -142,14 +142,18 @@ df2 = pd.read_csv('df2.csv')
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
     # Convertir la entrada a un DataFrame
-    data = pd.DataFrame([[year, metascore, genres]], columns=["year", "metascore", "genres"])
+    data = pd.DataFrame([[year, metascore, ",".join(genres)]], columns=["year", "metascore", "genres"])
 
     # Obtener las variables dummy de los géneros de la misma manera que se hizo durante el entrenamiento
     data_genres = data["genres"].str.get_dummies(sep=",")
-    genre_columns = data_genres.columns.tolist()
-    missing_columns = set(df2.filter(like="genres_").columns.tolist()) - set(genre_columns)
+    
+    # Verificar si hay columnas faltantes en data_genres en comparación con X_train
+    missing_columns = set(X_train.columns) - set(data_genres.columns)
     for column in missing_columns:
         data_genres[column] = 0
+
+    # Asegurar el orden de las columnas en data_genres
+    data_genres = data_genres[X_train.filter(like="genres_").columns]
 
     # Concatenar las variables dummy con el resto de las columnas
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
