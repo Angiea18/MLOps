@@ -70,7 +70,7 @@ def specs(año: str):
 
 # Endpoint 4: Cantidad de juegos con early access en un año
 @app.get('/ Earlyaccess')
-def earlyacces(año: str):
+def earlyaccess(año: str):
     #Filtrar los datos por el año especificado y por juegos con early access
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
 
