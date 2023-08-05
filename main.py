@@ -114,10 +114,10 @@ def metascore(año: str):
     return top_juegos_metascore
 
 
-# Cargar el modelo de regresión lineal múltiple desde el archivo con pickle
-modelo_guardado = "modelo_regresion_lineal.pkl"
+# Cargar el modelo de Bagging desde el archivo con pickle
+modelo_guardado = "modelo_bagging.pkl"
 with open(modelo_guardado, "rb") as file:
-    linear_model = pickle.load(file)
+    bagging_model = pickle.load(file)
 
 # Definir el Enum para los géneros disponibles
 class Genre(str, Enum):
@@ -141,6 +141,7 @@ df2 = pd.read_csv('df2.csv')
 
 # Definir X_train como las características utilizadas para entrenar el modelo
 X_train = df2[["metascore", "year"] + df2.filter(like="genres_").columns.tolist()]
+y_train = df2["price"]
 
 # Función para realizar la predicción
 def predict_price(year, metascore, genres):
@@ -161,11 +162,11 @@ def predict_price(year, metascore, genres):
     # Concatenar las variables dummy con el resto de las columnas
     data = pd.concat([data[["year", "metascore"]], data_genres], axis=1)
 
-    # Realizar la predicción
-    predicted_price = linear_model.predict(data)[0]
+    # Realizar la predicción con el modelo de Bagging
+    predicted_price = bagging_model.predict(data)[0]
 
     # Calcular el RMSE durante el entrenamiento del modelo
-    y_pred_train = linear_model.predict(X_train)
+    y_pred_train = bagging_model.predict(X_train)
     rmse_train = mean_squared_error(y_train, y_pred_train, squared=False)
 
     return predicted_price, rmse_train
