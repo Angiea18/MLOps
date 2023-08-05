@@ -133,7 +133,7 @@ class Genre(str, Enum):
     Simulation = "Simulation"
     Sports = "Sports"
     Strategy = "Strategy"
-    Video_Production = "Video Production"
+   
 
 # Cargar el DataFrame df2 con tus datos
 df2 = pd.read_csv('df2.csv')
