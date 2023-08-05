@@ -164,7 +164,7 @@ class PredictionOutput(BaseModel):
 
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
-def predict(year: int = Query(..., ge=0), metascore: float = Query(..., ge=0), genres: Genre):
+def predict(year: int, metascore: float, genres: Genre = None):
     # Obtener la predicción
     predicted_price = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
 
