@@ -164,21 +164,27 @@ def predict_price(year, metascore, genres):
     # Realizar la predicción
     predicted_price = linear_model.predict(data)[0]
 
-    return predicted_price
+    # Calcular el RMSE durante el entrenamiento del modelo
+    y_pred_train = linear_model.predict(X_train)
+    rmse_train = mean_squared_error(y_train, y_pred_train, squared=False)
+
+    return predicted_price, rmse_train
 
 # Definir el modelo de datos para la salida de la predicción
 class PredictionOutput(BaseModel):
     predicted_price: float
+    rmse: float
 
 # Ruta para la predicción
 @app.get("/predict/", response_model=PredictionOutput)
-def predict(year: int, metascore: float, genres: Genre):
-    # Obtener la predicción
-    predicted_price = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
+def predict(year: int, metascore: float, genres: Genre = None):
+    # Obtener la predicción y el RMSE
+    predicted_price, rmse_train = predict_price(year, metascore, genres.value)  # genres.value obtiene el valor del Enum
 
     # Crear un diccionario con el resultado
     result = {
         "predicted_price": predicted_price,
+        "rmse": rmse_train
     }
 
     return result
