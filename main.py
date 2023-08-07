@@ -37,7 +37,7 @@ def genero(año: str):
 
     # Verificar si hay suficientes datos para ese año
     if generos_count.empty:
-        return "Sin registros para ese año, ingresa otro valor"
+        return {"Sin registros para ese año, ingresa otro valor"}
     
     # Obtener los 5 géneros más vendidos en orden correspondiente
     generos_mas_repetidos = generos_count.nlargest(5).to_dict()
@@ -55,7 +55,7 @@ def juegos(año: str):
 
     # Verificar si hay suficientes datos para ese año
     if not juegos_lanzados:
-        return "Sin registros para ese año, ingresa otro valor"
+        return {"Sin registros para ese año, ingresa otro valor"}
 
     # Devolver la lista de juegos en un diccionario con el año como clave
     juegos_por_año = {año: juegos_lanzados}
@@ -113,7 +113,7 @@ def sentiment(año: str):
 
     # Verificar si el diccionario está vacío
     if not sentimient_dict:
-        return {"mensaje": "Sin registros para ese año, ingresa otro valor"}
+        return  {"Sin registros para ese año, ingresa otro valor"}
 
     return sentimient_dict
 
@@ -125,7 +125,7 @@ def metascore(año: str):
 
     # Verificar si hay suficientes datos para ese año
     if df_filtrado.empty:
-        return {"mensaje": "Sin registros para ese año, ingresa otro valor"}
+        return {"Sin registros para ese año, ingresa otro valor"}
 
     # Seleccionar los 5 juegos con mayor metascore y obtener su información de título y metascore
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
