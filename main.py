@@ -45,10 +45,7 @@ def genero(año: str):
     return generos_mas_repetidos
 
 # Endpoint 2: Juegos lanzados en un año
-@app.get('/Juegos', description="Ingresa un año y devuelve una lista de juegos lanzados en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {"1970":[
-  "Last Train To Berlin",
-  "Hercules in New York"
-]}")
+@app.get('/Juegos', description="Ingresa un año y devuelve una lista de juegos lanzados en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {"1970":[  "Last Train To Berlin",  "Hercules in New York"]}")
 def juegos(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
