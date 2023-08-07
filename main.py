@@ -24,7 +24,7 @@ df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
 
 
 # Endpoint 1: Géneros más repetidos por año
-@app.get('/ Genero')
+@app.get('/Genero')
 def genero(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -84,7 +84,7 @@ def specs(año: str):
     return top_5_specs
 
 # Endpoint 4: Cantidad de juegos con early access en un año
-@app.get('/ Earlyaccess')
+@app.get('/Earlyaccess')
 def earlyaccess(año: str):
     #Filtrar los datos por el año especificado y por juegos con early access
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
@@ -124,7 +124,7 @@ def metascore(año: str):
     df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
 
     # Verificar si hay suficientes datos para ese año
-    if df_filtrado.empty:
+    if not top_juegos_metascore:
         return {"Sin registros para ese año, ingresa otro valor"}
 
     # Seleccionar los 5 juegos con mayor metascore y obtener su información de título y metascore
