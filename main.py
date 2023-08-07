@@ -24,7 +24,7 @@ df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
 
 
 # Endpoint 1: Géneros más repetidos por año
-@app.get('/ Genero')
+@app.get('/ Genero', description="Ingresa un año y devuelve un diccionario con los 5 géneros más repetidos en ese año, en formato género: cantidad. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'Action': 3}")
 def genero(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -35,30 +35,54 @@ def genero(año: str):
     # Calcular el conteo de cada género en la lista
     generos_count = pd.Series(generos_list).value_counts()
 
+    # Verificar si hay suficientes datos para ese año
+    if generos_count.empty:
+        return "Sin registros para ese año, ingresa otro valor"
+    
     # Obtener los 5 géneros más vendidos en orden correspondiente
     generos_mas_repetidos = generos_count.nlargest(5).to_dict()
 
     return generos_mas_repetidos
 
 # Endpoint 2: Juegos lanzados en un año
-@app.get('/ Juegos')
+@app.get('/Juegos', description="Ingresa un año y devuelve una lista de juegos lanzados en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {"1970":[
+  "Last Train To Berlin",
+  "Hercules in New York"
+]}")
 def juegos(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
 
-    # Obtiener la lista de juegos lanzados en el año
+    # Obtener la lista de juegos lanzados en el año
     juegos_lanzados = df_filtrado['title'].tolist()
 
-    return juegos_lanzados
+    # Verificar si hay suficientes datos para ese año
+    if not juegos_lanzados:
+        return "Sin registros para ese año, ingresa otro valor"
+
+    # Devolver la lista de juegos en un diccionario con el año como clave
+    juegos_por_año = {año: juegos_lanzados}
+
+    return juegos_por_año
 
 # Endpoint 3: Specs más comunes por año
-@app.get('/ Specs')
+@app.get('/Specs', description="Ingresa un año y devuelve un diccionario con los 5 specs más comunes en ese año,  en formato spec: cantidad. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {
+  "Single-player": 111,
+  "Steam Achievements": 53,
+  "Full controller support": 29,
+  "Steam Cloud": 26,
+  "Partial Controller Support": 23
+}
 def specs(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
-    
+
     # Obtener una lista con todos los Specs para el año dado
     specs_list = df_filtrado['specs'].explode().tolist()
+
+    # Verificar si hay suficientes datos para ese año
+    if not specs_list:
+        return "Sin registros para ese año, ingresa otro valor"
 
     # Calcular el conteo de cada Spec en la lista
     specs_count = pd.Series(specs_list).value_counts()
@@ -69,18 +93,22 @@ def specs(año: str):
     return top_5_specs
 
 # Endpoint 4: Cantidad de juegos con early access en un año
-@app.get('/ Earlyaccess')
+@app.get('/Earlyaccess', description="Ingresa un año y devuelve la cantidad de juegos que tienen early access en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'año': 10}")
 def earlyaccess(año: str):
-    #Filtrar los datos por el año especificado y por juegos con early access
+    # Filtrar los datos por el año especificado y por juegos con early access
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
 
-    #Contar la cantidad de juegos con early access en el año especificado
+    # Verificar si hay suficientes datos para ese año
+    if df_filtrado.empty:
+        return {"año": año, "cantidad_juegos_early_access": 0, "mensaje": "Sin registros para ese año, ingresa otro valor"}
+
+    # Contar la cantidad de juegos con early access en el año especificado
     cantidad_juegos_early_access = len(df_filtrado)
 
-    return cantidad_juegos_early_access
+    return {"año": año, "cantidad_juegos_early_access": cantidad_juegos_early_access}
 
 # Endpoint 5: Análisis de sentimiento por año
-@app.get('/ Sentimient')
+@app.get('/Sentimient', description="Ingresa un año y devuelve un diccionario con la cantidad de registros que cumplen con cada análisis de sentimiento para ese año. Los análisis de sentimiento válidos son 'Mixed', 'Positive', 'Very Positive', 'Mostly Positive', 'Negative', 'Very Negative', 'Mostly Negative', 'Overwhelmingly Positive' y 'Overwhelmingly Negative'. En caso de no haber datos para ningún análisis de sentimiento válido, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'Mixed': 5, 'Positive': 30, 'Very Positive': 10}")
 def sentiment(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -96,22 +124,27 @@ def sentiment(año: str):
                             "Negative", "Very Negative", "Mostly Negative", "Overwhelmingly Positive", "Overwhelmingly Negative"]
     sentimient_dict = {sentimient: count for sentimient, count in sentimient_dict.items() if sentimient in sentimient_valid}
 
-     # Verificar si el diccionario está vacío
+    # Verificar si el diccionario está vacío
     if not sentimient_dict:
-        return "Sin registros"
+        return {"mensaje": "Sin registros para ese año, ingresa otro valor"}
 
     return sentimient_dict
 
 # Endpoint 6: Top 5 juegos con mayor metascore por año
-@app.get('/ Metascore')
+@app.get('/Metascore', description="Ingresa un año y devuelve una lista de los 5 juegos con mayor metascore en ese año, en formato de diccionarios con 'title' y 'metascore'. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: [{'title': 'STAR WARS™ Jedi Knight: Dark Forces II', 'metascore': 91}, {'title': 'Fallout: A Post Nuclear Role Playing Game', 'metascore': 89}, {'title': 'Total Annihilation', 'metascore': 86}, {'title': 'Riven: The Sequel to MYST', 'metascore': 83}, {'title': 'The Last Express Gold Edition', 'metascore': 82}]")
 def metascore(año: str):
-    #Filtrar los datos por el año especificado y ordena por metascore de forma descendente
+    # Filtrar los datos por el año especificado y ordenar por metascore de forma descendente
     df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
 
-    #Seleccionar los 5 juegos con mayor metascore y obtiene su información
+    # Verificar si hay suficientes datos para ese año
+    if df_filtrado.empty:
+        return {"mensaje": "Sin registros para ese año, ingresa otro valor"}
+
+    # Seleccionar los 5 juegos con mayor metascore y obtener su información de título y metascore
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
     return top_juegos_metascore
+
 
 
 # Cargar el modelo de Bagging desde el archivo con pickle
