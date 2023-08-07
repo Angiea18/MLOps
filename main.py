@@ -63,13 +63,7 @@ def juegos(año: str):
     return juegos_por_año
 
 # Endpoint 3: Specs más comunes por año
-@app.get('/Specs', description="Ingresa un año y devuelve un diccionario con los 5 specs más comunes en ese año,  en formato spec: cantidad. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {
-  "Single-player": 111,
-  "Steam Achievements": 53,
-  "Full controller support": 29,
-  "Steam Cloud": 26,
-  "Partial Controller Support": 23
-}
+@app.get('/Specs', description="Ingresa un año y devuelve un diccionario con los 5 specs más comunes en ese año, en formato spec: cantidad.\n\nEn caso de no haber datos suficientes, retorna un diccionario vacío.\n\nEjemplo de retorno: {'Single-player': 111, 'Steam Achievements': 53, 'Full controller support': 29, 'Steam Cloud': 26, 'Partial Controller Support': 23}")
 def specs(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -77,15 +71,15 @@ def specs(año: str):
     # Obtener una lista con todos los Specs para el año dado
     specs_list = df_filtrado['specs'].explode().tolist()
 
-    # Verificar si hay suficientes datos para ese año
-    if not specs_list:
-        return "Sin registros para ese año, ingresa otro valor"
-
     # Calcular el conteo de cada Spec en la lista
     specs_count = pd.Series(specs_list).value_counts()
 
     # Obtener los 5 Specs más comunes en orden correspondiente
     top_5_specs = specs_count.nlargest(5).to_dict()
+
+    # Verificar si hay suficientes datos para ese año
+    if not top_5_specs:
+        return {}
 
     return top_5_specs
 
