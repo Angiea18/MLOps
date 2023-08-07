@@ -24,7 +24,7 @@ df['metascore'] = pd.to_numeric(df['metascore'], errors='coerce')
 
 
 # Endpoint 1: Géneros más repetidos por año
-@app.get('/ Genero', description="Ingresa un año y devuelve un diccionario con los 5 géneros más repetidos en ese año, en formato género: cantidad. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'Action': 3}")
+@app.get('/ Genero')
 def genero(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -45,7 +45,7 @@ def genero(año: str):
     return generos_mas_repetidos
 
 # Endpoint 2: Juegos lanzados en un año
-@app.get('/Juegos', description="Ingresa un año y devuelve una lista de juegos lanzados en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {"1970":[  "Last Train To Berlin",  "Hercules in New York"]}")
+@app.get('/Juegos')
 def juegos(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -63,7 +63,7 @@ def juegos(año: str):
     return juegos_por_año
 
 # Endpoint 3: Specs más comunes por año
-@app.get('/Specs', description="Ingresa un año y devuelve un diccionario con los 5 specs más comunes en ese año, en formato spec: cantidad.\n\nEn caso de no haber datos suficientes, retorna un diccionario vacío.\n\nEjemplo de retorno: {'Single-player': 111, 'Steam Achievements': 53, 'Full controller support': 29, 'Steam Cloud': 26, 'Partial Controller Support': 23}")
+@app.get('/Specs')
 def specs(año: str):
     # Filtrar el DataFrame por el año proporcionado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -84,7 +84,7 @@ def specs(año: str):
     return top_5_specs
 
 # Endpoint 4: Cantidad de juegos con early access en un año
-@app.get('/Earlyaccess', description="Ingresa un año y devuelve la cantidad de juegos que tienen early access en ese año. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'año': 10}")
+@app.get('/Earlyaccess')
 def earlyaccess(año: str):
     # Filtrar los datos por el año especificado y por juegos con early access
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
@@ -99,7 +99,7 @@ def earlyaccess(año: str):
     return {"año": año, "cantidad_juegos_early_access": cantidad_juegos_early_access}
 
 # Endpoint 5: Análisis de sentimiento por año
-@app.get('/Sentimient', description="Ingresa un año y devuelve un diccionario con la cantidad de registros que cumplen con cada análisis de sentimiento para ese año. Los análisis de sentimiento válidos son 'Mixed', 'Positive', 'Very Positive', 'Mostly Positive', 'Negative', 'Very Negative', 'Mostly Negative', 'Overwhelmingly Positive' y 'Overwhelmingly Negative'. En caso de no haber datos para ningún análisis de sentimiento válido, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: {'Mixed': 5, 'Positive': 30, 'Very Positive': 10}")
+@app.get('/Sentimient')
 def sentiment(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
@@ -122,7 +122,7 @@ def sentiment(año: str):
     return sentimient_dict
 
 # Endpoint 6: Top 5 juegos con mayor metascore por año
-@app.get('/Metascore', description="Ingresa un año y devuelve una lista de los 5 juegos con mayor metascore en ese año, en formato de diccionarios con 'title' y 'metascore'. En caso de no haber datos suficientes, retorna un mensaje de 'Sin registros para ese año, ingresa otro valor'.\n\nEjemplo de retorno: [{'title': 'STAR WARS™ Jedi Knight: Dark Forces II', 'metascore': 91}, {'title': 'Fallout: A Post Nuclear Role Playing Game', 'metascore': 89}, {'title': 'Total Annihilation', 'metascore': 86}, {'title': 'Riven: The Sequel to MYST', 'metascore': 83}, {'title': 'The Last Express Gold Edition', 'metascore': 82}]")
+@app.get('/Metascore')
 def metascore(año: str):
     # Filtrar los datos por el año especificado y ordenar por metascore de forma descendente
     df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
@@ -193,7 +193,7 @@ def predict_price(metascore, year, genres):
     y_pred_train = bagging_model.predict(X_train)
     rmse_train = mean_squared_error(y_train, y_pred_train, squared=False)
 
-    return predicted_price, rmse_train
+    return round(predicted_price, 2), round(rmse_train, 2)  # Redondear a dos decimales
 
 # Definir el modelo de datos para la salida de la predicción
 class PredictionOutput(BaseModel):
