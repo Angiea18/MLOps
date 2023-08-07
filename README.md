@@ -103,6 +103,6 @@ API [aquí](https://github.com/Angiea18/1-proyecto-individual-MLOps/blob/main/ma
 ## Deployment
 Para el deploy de la API, se utilizó la plataforma **`Render`**. Los datos están listos para ser consumidos y consultados a partir del siguiente link
 
-[Link al Deployment](https://steam-games.onrender.com/)
+[Link al Deployment](https://steam-games.onrender.com)
 ## Video
 Para consultar sobre los pasos del proceso y una explicación más profunda es posible acceder al [siguiente enlace](https://youtu.be/GRdIm8A_rI0)
