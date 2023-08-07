@@ -105,4 +105,4 @@ Para el deploy de la API, se utilizó la plataforma **`Render`**. Los datos est�
 
 [Link al Deployment](https://steam-games.onrender.com/)
 ## Video
-Para consultar sobre los pasos del proceso y una explicación más profunda es posible acceder al [siguiente enlace]()
+Para consultar sobre los pasos del proceso y una explicación más profunda es posible acceder al [siguiente enlace](https://youtu.be/GRdIm8A_rI0)
