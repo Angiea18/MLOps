@@ -123,10 +123,6 @@ def metascore(año: str):
     # Filtrar los datos por el año especificado y ordenar por metascore de forma descendente
     df_filtrado = df[df['release_date'].dt.year == int(año)].sort_values(by='metascore', ascending=False)
 
-    # Verificar si hay suficientes datos para ese año
-    if not top_juegos_metascore:
-        return {"Sin registros para ese año, ingresa otro valor"}
-
     # Seleccionar los 5 juegos con mayor metascore y obtener su información de título y metascore
     top_juegos_metascore = df_filtrado.head(5)[['title', 'metascore']].to_dict(orient='records')
 
