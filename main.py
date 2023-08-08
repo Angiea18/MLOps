@@ -86,16 +86,21 @@ def specs(año: str):
 # Endpoint 4: Cantidad de juegos con early access en un año
 @app.get('/Earlyaccess')
 def earlyaccess(año: str):
-    #Filtrar los datos por el año especificado y por juegos con early access
+    # Filtrar los datos por el año especificado y por juegos con early access
     df_filtrado = df[(df['release_date'].dt.year == int(año)) & (df['early_access'] == True)]
 
-    #Contar la cantidad de juegos con early access en el año especificado
+    # Contar la cantidad de juegos con early access en el año especificado
     cantidad_juegos_early_access = len(df_filtrado)
 
-    return cantidad_juegos_early_access
+    # Crear el diccionario de respuesta
+    respuesta = {
+        año: cantidad_juegos_early_access
+    }
+
+    return respuesta
 
 # Endpoint 5: Análisis de sentimiento por año
-@app.get('/Sentimient')
+@app.get('/Sentiment')
 def sentiment(año: str):
     # Filtrar los datos por el año especificado
     df_filtrado = df[df['release_date'].dt.year == int(año)]
