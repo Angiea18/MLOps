@@ -1,5 +1,3 @@
-![Logo](https://github.com/Angiea18/1-proyecto-individual-MLOps/blob/main/soy_henry_data.png?raw=true)
-
 # PROYECTO INDIVIDUAL Nº1 - DATA SCIENCE
 
 
